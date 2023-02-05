@@ -1,0 +1,313 @@
+[
+    {
+        "id": "e18e4cf6489a3a2a",
+        "type": "tab",
+        "label": "Beehive",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "b4551802b44dba5c",
+        "type": "function",
+        "z": "e18e4cf6489a3a2a",
+        "name": "Unifier TTNV3",
+        "func": "var unified = {};\nunified.source = \"TTNV3\";\n\n\nif('join_accept' in msg.payload){\n    return;\n}\n\n// unified.dateTime = msg.collectedTime;\nvar tzoffset = (new Date()).getTimezoneOffset() * 60000; //offset in milliseconds\nvar dateTime = (new Date(Date.now() - tzoffset)).toISOString().slice(0, 19).replace('T', ' ');\nunified.dateTime = dateTime;\n\nunified.devID = msg.payload.end_device_ids.device_id;\nunified.appEUI = msg.payload.end_device_ids.join_eui;\nunified.devEUI = msg.payload.end_device_ids.dev_eui;\n\nif(typeof msg.payload.uplink_message.f_cnt !== 'undefined') {\n    unified.fcnt = msg.payload.uplink_message.f_cnt\n}else{\n    unified.fcnt = 0;\n}\n\nunified.port = msg.payload.uplink_message.f_port;\nunified.devAddr = msg.payload.end_device_ids.dev_addr;\nunified.frequency = parseInt(msg.payload.uplink_message.settings.frequency)/1000000;\n\nunified.sf = msg.payload.uplink_message.settings.data_rate.lora.spreading_factor\n// unified.sf = \"\";\n\nunified.payload = {};\nunified.payload.buffer = Buffer.from(msg.payload.uplink_message.frm_payload, 'base64');\nunified.payload.size = Buffer.byteLength(msg.payload.uplink_message.frm_payload);\nunified.payload.base64 = msg.payload.uplink_message.frm_payload;\nunified.payload.decoded = {};\nunified.payload.decoded = msg.payload.uplink_message.decoded_payload;\n\nunified.metaData = {};\nunified.metaData.gatewayCount = msg.payload.uplink_message.rx_metadata.length;\nunified.metaData.gateways = [];\nfor (var i=0 ; i < unified.metaData.gatewayCount ; i++) {\n    var data = {};\n    data.name = msg.payload.uplink_message.rx_metadata[i].gateway_ids.gateway_id;\n    \n    if(typeof msg.payload.uplink_message.rx_metadata[i].gateway_ids.eui !== 'undefined') {\n        data.id = msg.payload.uplink_message.rx_metadata[i].gateway_ids.eui;\n    } else {\n        data.id = 0;\n    }\n    \n    data.rssi = msg.payload.uplink_message.rx_metadata[i].rssi;\n    data.snr = msg.payload.uplink_message.rx_metadata[i].snr;\n    \n    if(typeof msg.payload.uplink_message.rx_metadata[i].location !== 'undefined') {\n        data.lat = msg.payload.uplink_message.rx_metadata[i].location.latitude;\n        data.lon = msg.payload.uplink_message.rx_metadata[i].location.longitude;\n        data.height = msg.payload.uplink_message.rx_metadata[i].location.altitude;\n    } else {\n        data.lat = 0;\n        data.lon = 0;\n        data.height = 0;\n    }\n    \n    unified.metaData.gateways.push(data);\n}\n\nreturn unified;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "5fb2c07fc87b0571"
+            ]
+        ],
+        "inputLabels": [
+            "Helium"
+        ],
+        "outputLabels": [
+            "Unified"
+        ],
+        "icon": "font-awesome/fa-arrows-alt"
+    },
+    {
+        "id": "d4d6ae2f1f99517b",
+        "type": "ui_gauge",
+        "z": "e18e4cf6489a3a2a",
+        "name": "Batterij",
+        "group": "5240402b6fc90fcd",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Batterij",
+        "label": "percentage",
+        "format": "{{msg.payload.battery}}",
+        "min": "0",
+        "max": "100",
+        "colors": [
+            "#0080ff",
+            "#008000",
+            "#ff0000"
+        ],
+        "seg1": "18",
+        "seg2": "24",
+        "className": "",
+        "x": 700,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "64c4e6771f93b7f9",
+        "type": "ui_gauge",
+        "z": "e18e4cf6489a3a2a",
+        "name": "Bijenactiviteit",
+        "group": "5240402b6fc90fcd",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Bijenactiviteit",
+        "label": "db",
+        "format": "{{msg.payload.beeactivity}}",
+        "min": "70",
+        "max": "120",
+        "colors": [
+            "#0080ff",
+            "#008000",
+            "#ff0000"
+        ],
+        "seg1": "18",
+        "seg2": "24",
+        "className": "",
+        "x": 710,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "5fb2c07fc87b0571",
+        "type": "function",
+        "z": "e18e4cf6489a3a2a",
+        "name": "divide payloads",
+        "func": "\nvar tempMsg = {};\nvar cntMsg = {};\n\ntempMsg.payload = {};\ncntMsg.payload = {};\n\nif (msg.port == 1){\n    //node.warn(\"port is \" + msg.port);\n    tempMsg.pid = msg.payload.decoded.ptype\n    tempMsg.payload.battery = msg.payload.decoded.battery;\n    tempMsg.payload.beeactivity = msg.payload.decoded.beeactivity;\n    tempMsg.payload.honey = msg.payload.decoded.honey;\n    //tempMsg.payload.datetime = new Date().toISOString().slice(0, 19).replace('T', ' ');\n    // Event is the tablename of the database\n    tempMsg.payload.database = \"Event\";\n\n    return [tempMsg, null];\n    }\nelse if(msg.port == 2){\n    //node.warn(\"port is \" + msg.port);\n    cntMsg.pid = msg.payload.decoded.ptype\n    cntMsg.payload.count = msg.payload.decoded.count;\n    return [null,cntMsg];\n}\n\n\n \n\n",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 140,
+        "wires": [
+            [
+                "d4d6ae2f1f99517b",
+                "52cceeebf49bdd46",
+                "64c4e6771f93b7f9",
+                "769eefda9757f064"
+            ],
+            [
+                "e8d058cd0f6e99f4"
+            ]
+        ]
+    },
+    {
+        "id": "52cceeebf49bdd46",
+        "type": "template",
+        "z": "e18e4cf6489a3a2a",
+        "name": "sql",
+        "field": "topic",
+        "fieldType": "msg",
+        "format": "handlebars",
+        "syntax": "mustache",
+        "template": "INSERT INTO `{{payload.database}}` (`battery`, `honey`, `beeactivity`) VALUES (\"{{payload.battery}}\", \"{{payload.honey}}\", \"{{payload.beeactivity}}\")",
+        "output": "str",
+        "x": 150,
+        "y": 240,
+        "wires": [
+            [
+                "c739319ba621a1b2"
+            ]
+        ]
+    },
+    {
+        "id": "f59cb72afc07cb3e",
+        "type": "mqtt in",
+        "z": "e18e4cf6489a3a2a",
+        "name": "",
+        "topic": "v3/michelles-first-application@ttn/devices/michelles-second-application/up",
+        "qos": "2",
+        "datatype": "auto-detect",
+        "broker": "fc34e47f041a0e2b",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 280,
+        "y": 40,
+        "wires": [
+            [
+                "b4551802b44dba5c"
+            ]
+        ]
+    },
+    {
+        "id": "c739319ba621a1b2",
+        "type": "mysql",
+        "z": "e18e4cf6489a3a2a",
+        "mydb": "1e0ccb57d8022e98",
+        "name": "Beehive",
+        "x": 360,
+        "y": 360,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "769eefda9757f064",
+        "type": "ui_gauge",
+        "z": "e18e4cf6489a3a2a",
+        "name": "Honing",
+        "group": "5240402b6fc90fcd",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "gtype": "gage",
+        "title": "Honing",
+        "label": "kg",
+        "format": "{{msg.payload.honey}}",
+        "min": "0",
+        "max": "20",
+        "colors": [
+            "#0080ff",
+            "#008000",
+            "#ff0000"
+        ],
+        "seg1": "18",
+        "seg2": "24",
+        "className": "",
+        "x": 720,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "eaae77523960fbbc",
+        "type": "mqtt out",
+        "z": "e18e4cf6489a3a2a",
+        "name": "",
+        "topic": "v3/michelles-first-application@ttn/devices/michelles-second-application/down/push",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "fc34e47f041a0e2b",
+        "x": 1010,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "e8d058cd0f6e99f4",
+        "type": "function",
+        "z": "e18e4cf6489a3a2a",
+        "name": "send_ack",
+        "func": "\nmsg.payload = {\n    \"downlinks\": [{\n        \"f_port\": 15,\n        \"frm_payload\": \"vu8=\",\n        \"priority\": \"NORMAL\"\n    }]\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 520,
+        "y": 480,
+        "wires": [
+            [
+                "eaae77523960fbbc"
+            ]
+        ]
+    },
+    {
+        "id": "0fb969386d3c8132",
+        "type": "ui_button",
+        "z": "e18e4cf6489a3a2a",
+        "name": "",
+        "group": "5240402b6fc90fcd",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "label": "button",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "x": 210,
+        "y": 560,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5240402b6fc90fcd",
+        "type": "ui_group",
+        "name": "BeePerformance",
+        "tab": "ed02a82d0fdbf5d9",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "fc34e47f041a0e2b",
+        "type": "mqtt-broker",
+        "name": "MQTT-TTN",
+        "broker": "eu1.cloud.thethings.network",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "1e0ccb57d8022e98",
+        "type": "MySQLdatabase",
+        "name": "Beehive",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "Beehive",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
+        "id": "ed02a82d0fdbf5d9",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]

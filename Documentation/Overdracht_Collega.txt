@@ -1,0 +1,21 @@
+Beste Remko,
+
+Wat ontzettend fijn dat jij verder gaat met het IoT project voor de Blije Bij. Als ik iemand dit toevertrouw ben jij het wel!
+
+Hieronder zal ik toelichten wat ik al heb gedaan en wat jij nog kan doen om het verder uit te breiden voor Bob de imker van de Blije Bij.
+
+Done:
+
+- Event & Alarm payload in C++ en Arduino code voor naar TTN is opgezet.
+- Node red is ingesteld en dashboard voor Event payload is gemaakt.
+- Database (PHPmyadmin MQTT etc) is geconfigureerd. Data wordt in de database (Beehive) geschreven.
+- In Grafana wordt een grafiek getoond van de bijenactiviteit. 
+- Er wordt een downlink bericht verstuurd voor de alarm payload. (Ik heb geprobeerd om een acknowledge bericht ervan te maken, maar daar kwam ik niet helemaal uit. Vandaar dat ik het zo heb opgelost)
+
+To do:
+
+- Het alarmbericht moet nog verder uitgebreid worden met een downlink bericht als de kast omvalt, als het batterijpercentage te laag wordt en wanneer de kast gestolen wordt (GPS verandering).
+- Het is misschien handig als je ervoor zorgt dat de GPS tracker om de zoveel minuten een bericht stuurt van de locatie zodat er een GPS trail ontstaat waardoor je de gestolen bijenkast makkelijker kan traceren.
+- Je kan altijd meer data in de database zetten om dat vervolgens weer te geven in Grafana. Om het overzichtelijk te houden heb ik nu alleen de bijenactiviteit toegevoegd, maar het is ook interessant om bv de honingproductie per seizoen erin te zetten.
+
+

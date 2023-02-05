@@ -1,0 +1,6 @@
+# ninja log v5
+1	415	6865228656717019	build.ninja	5b657a0af2a16861
+3	320	6865228648788579	CMakeFiles/Beehive_Payloadencoder.dir/main.cpp.obj	56eeac7d73667bd0
+288	357	6865217015161376	Beehive_Payloadencoder.exe	cff374d3ee633a23
+3	64	6865240150131771	CMakeFiles/Beehive_Payloadencoder.dir/payloadencoder.cpp.obj	3365c42d09ad5d10
+64	225	6865240151712117	Beehive_Payloadencoder.exe	750ed6fc5dfac061
